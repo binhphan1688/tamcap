@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chọn Ngày Đi Picnic</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f7f9fb;
+      color: #333;
+    }
+
+    h2, h3 {
+      color: #2c3e50;
+    }
+
+    label, input, button {
+      font-size: 16px;
+    }
+
+    input[type="text"] {
+      padding: 6px;
+      margin: 10px 0;
+      width: 200px;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin-left: 10px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .checkbox-container {
+      margin-top: 20px;
+      margin-bottom: 30px;
+      padding: 10px;
+      background-color: #ecf0f1;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .checkbox-container label {
+      display: inline-block;
+      margin: 5px 15px 5px 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 700px;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #bdc3c7;
+    }
+
+    .busy {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .free {
+      background-color: #2ecc71;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🧺 Chọn ngày bạn bận để lên kế hoạch picnic</h2>
+  <label>Nhập tên bạn:
+    <input type="text" id="username" placeholder="Ví dụ: An, Bình...">
+  </label>
+  <button onclick="submitBusyDays()">Lưu ngày bận</button>
+
+  <div class="checkbox-container" id="checkboxes"></div>
+
+  <h3>📊 Bảng ngày bận của nhóm</h3>
+  <div id="summaryTable"></div>
+
+  <script>
+    const days = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+    let membersData = JSON.parse(localStorage.getItem("busyData")) || {};
+    let currentUser = null;
+
+    const createCheckboxes = (selected = []) => {
+      const container = document.getElementById("checkboxes");
+      container.innerHTML = "";
+      days.forEach(day => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = day;
+        if (selected.includes(day)) checkbox.checked = true;
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(" " + day));
+        container.appendChild(label);
+      });
+    };
+
+    const submitBusyDays = () => {
+      const username = document.getElementById("username").value.trim();
+      if (!username) return alert("Vui lòng nhập tên!");
+
+      if (membersData[username] && currentUser !== username) {
+        return alert("Tên này đã được người khác sử dụng. Vui lòng dùng tên khác.");
+      }
+
+      currentUser = username;
+
+      const checkboxes = document.querySelectorAll("input[type='checkbox']");
+      const busyDays = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) busyDays.push(cb.value);
+      });
+
+      membersData[username] = busyDays;
+      localStorage.setItem("busyData", JSON.stringify(membersData));
+
+      renderTable();
+      alert("Đã lưu lịch bận cho " + username);
+    };
+
+    const renderTable = () => {
+      const allUsers = Object.keys(membersData);
+      let html = "<table><tr><th>Ngày</th>";
+      allUsers.forEach(user => html += `<th>${user}</th>`);
+      html += "</tr>";
+
+      days.forEach(day => {
+        html += `<tr><td>${day}</td>`;
+        allUsers.forEach(user => {
+          const isBusy = membersData[user].includes(day);
+          html += `<td class="${isBusy ? 'busy' : 'free'}">${isBusy ? '❌' : '✅'}</td>`;
+        });
+        html += "</tr>";
+      });
+      html += "</table>";
+
+      document.getElementById("summaryTable").innerHTML = html;
+    };
+
+    document.getElementById("username").addEventListener("change", (e) => {
+      const username = e.target.value.trim();
+      if (!username) return;
+
+      if (membersData[username] && username !== currentUser) {
+        alert("Tên này đã được dùng. Bạn không thể chỉnh sửa lịch của người khác.");
+        document.getElementById("checkboxes").innerHTML = "(Không thể chỉnh sửa)";
+      } else {
+        currentUser = username;
+        const prevData = membersData[username] || [];
+        createCheckboxes(prevData);
+      }
+    });
+
+    window.onload = () => {
+      createCheckboxes(); // khởi tạo rỗng ban đầu
+      renderTable();
+    };
+  </script>
+</body>
+</html>
