@@ -1,7 +1,6 @@
-<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Chọn Ngày Đi Picnic</title>
   <style>
     body {
@@ -10,21 +9,20 @@
       background-color: #f7f9fb;
       color: #333;
     }
-
-    h2, h3 {
+    h2,
+    h3 {
       color: #2c3e50;
     }
-
-    label, input, button {
+    label,
+    input,
+    button {
       font-size: 16px;
     }
-
     input[type="text"] {
       padding: 6px;
       margin: 10px 0;
       width: 200px;
     }
-
     button {
       padding: 8px 16px;
       margin-left: 10px;
@@ -34,11 +32,9 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #2980b9;
     }
-
     .checkbox-container {
       margin-top: 20px;
       margin-bottom: 30px;
@@ -47,34 +43,29 @@
       border-radius: 6px;
       width: fit-content;
     }
-
     .checkbox-container label {
       display: inline-block;
       margin: 5px 15px 5px 0;
     }
-
     table {
       border-collapse: collapse;
       width: 100%;
       max-width: 700px;
       margin-top: 20px;
     }
-
-    th, td {
+    th,
+    td {
       border: 1px solid #ccc;
       padding: 10px;
       text-align: center;
     }
-
     th {
       background-color: #bdc3c7;
     }
-
     .busy {
       background-color: #e74c3c;
       color: white;
     }
-
     .free {
       background-color: #2ecc71;
       color: white;
@@ -82,27 +73,44 @@
   </style>
 </head>
 <body>
-
   <h2>🧺 Chọn ngày bạn bận để lên kế hoạch picnic</h2>
-  <label>Nhập tên bạn:
-    <input type="text" id="username" placeholder="Ví dụ: An, Bình...">
+  <label
+    >Nhập tên bạn:
+    <input type="text" id="username" placeholder="Ví dụ: An, Bình..." />
   </label>
   <button onclick="submitBusyDays()">Lưu ngày bận</button>
+  <button
+    onclick="deleteBusyDays()"
+    style="background-color: #e74c3c; margin-left: 5px"
+  >
+    Xóa lịch bận
+  </button>
 
   <div class="checkbox-container" id="checkboxes"></div>
+
+  <!-- Danh sách ngày bận đã chọn với nút xóa từng ngày -->
+  <div id="busyDaysList" style="margin-top: 10px"></div>
 
   <h3>📊 Bảng ngày bận của nhóm</h3>
   <div id="summaryTable"></div>
 
   <script>
-    const days = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+    const days = [
+      "Thứ Hai",
+      "Thứ Ba",
+      "Thứ Tư",
+      "Thứ Năm",
+      "Thứ Sáu",
+      "Thứ Bảy",
+      "Chủ Nhật",
+    ];
     let membersData = JSON.parse(localStorage.getItem("busyData")) || {};
     let currentUser = null;
 
     const createCheckboxes = (selected = []) => {
       const container = document.getElementById("checkboxes");
       container.innerHTML = "";
-      days.forEach(day => {
+      days.forEach((day) => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -126,7 +134,7 @@
 
       const checkboxes = document.querySelectorAll("input[type='checkbox']");
       const busyDays = [];
-      checkboxes.forEach(cb => {
+      checkboxes.forEach((cb) => {
         if (cb.checked) busyDays.push(cb.value);
       });
 
@@ -134,20 +142,44 @@
       localStorage.setItem("busyData", JSON.stringify(membersData));
 
       renderTable();
+      renderBusyDaysList();
       alert("Đã lưu lịch bận cho " + username);
+    };
+
+    const deleteBusyDays = () => {
+      if (!currentUser) {
+        alert("Vui lòng nhập tên và chọn lịch để xóa.");
+        return;
+      }
+      if (!membersData[currentUser]) {
+        alert("Bạn chưa có lịch bận nào để xóa.");
+        return;
+      }
+      if (confirm(`Bạn có chắc muốn xóa lịch bận của ${currentUser}?`)) {
+        delete membersData[currentUser];
+        localStorage.setItem("busyData", JSON.stringify(membersData));
+        currentUser = null;
+        document.getElementById("username").value = "";
+        createCheckboxes(); // reset checkbox về trống
+        renderBusyDaysList();
+        renderTable();
+        alert("Đã xóa lịch bận.");
+      }
     };
 
     const renderTable = () => {
       const allUsers = Object.keys(membersData);
       let html = "<table><tr><th>Ngày</th>";
-      allUsers.forEach(user => html += `<th>${user}</th>`);
+      allUsers.forEach((user) => (html += `<th>${user}</th>`));
       html += "</tr>";
 
-      days.forEach(day => {
+      days.forEach((day) => {
         html += `<tr><td>${day}</td>`;
-        allUsers.forEach(user => {
+        allUsers.forEach((user) => {
           const isBusy = membersData[user].includes(day);
-          html += `<td class="${isBusy ? 'busy' : 'free'}">${isBusy ? '❌' : '✅'}</td>`;
+          html += `<td class="${isBusy ? "busy" : "free"}">${
+            isBusy ? "❌" : "✅"
+          }</td>`;
         });
         html += "</tr>";
       });
@@ -156,17 +188,75 @@
       document.getElementById("summaryTable").innerHTML = html;
     };
 
+    const renderBusyDaysList = () => {
+      if (
+        !currentUser ||
+        !membersData[currentUser] ||
+        membersData[currentUser].length === 0
+      ) {
+        document.getElementById("busyDaysList").innerHTML = "";
+        return;
+      }
+
+      const busyDays = membersData[currentUser];
+      let html =
+        '<strong>Ngày bạn đã chọn bận:</strong><ul style="list-style:none; padding-left:0;">';
+
+      busyDays.forEach((day) => {
+        html += `<li style="margin:5px 0;">
+          ${day} 
+          <button onclick="removeBusyDay('${day}')" style="margin-left:10px; background:#e74c3c; color:#fff; border:none; border-radius:3px; cursor:pointer;">Xóa</button>
+        </li>`;
+      });
+
+      html += "</ul>";
+
+      document.getElementById("busyDaysList").innerHTML = html;
+    };
+
+    const removeBusyDay = (day) => {
+      if (!currentUser) return;
+
+      let busyDays = membersData[currentUser] || [];
+      busyDays = busyDays.filter((d) => d !== day);
+      membersData[currentUser] = busyDays;
+
+      localStorage.setItem("busyData", JSON.stringify(membersData));
+
+      createCheckboxes(busyDays);
+      renderBusyDaysList();
+      renderTable();
+    };
+
     document.getElementById("username").addEventListener("change", (e) => {
       const username = e.target.value.trim();
       if (!username) return;
 
       if (membersData[username] && username !== currentUser) {
-        alert("Tên này đã được dùng. Bạn không thể chỉnh sửa lịch của người khác.");
-        document.getElementById("checkboxes").innerHTML = "(Không thể chỉnh sửa)";
+        if (
+          confirm(
+            `Tên "${username}" đã được dùng. Bạn có muốn xóa lịch bận của tên này để dùng tên này?`
+          )
+        ) {
+          delete membersData[username];
+          localStorage.setItem("busyData", JSON.stringify(membersData));
+          alert(
+            `Đã xóa lịch bận của "${username}". Bạn có thể nhập lịch của mình bây giờ.`
+          );
+          currentUser = username;
+          createCheckboxes();
+          renderBusyDaysList();
+          renderTable();
+        } else {
+          alert("Bạn không thể chỉnh sửa lịch của người khác.");
+          document.getElementById("checkboxes").innerHTML = "(Không thể chỉnh sửa)";
+          document.getElementById("busyDaysList").innerHTML = "";
+        }
       } else {
         currentUser = username;
         const prevData = membersData[username] || [];
         createCheckboxes(prevData);
+        renderBusyDaysList();
       }
     });
 
